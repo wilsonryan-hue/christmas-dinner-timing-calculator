@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Christmas dinner timing calculator (UK): turkey cooking time and countdown timeline</title>
+<meta name="description" content="Free one-file Christmas dinner timing calculator. Enter turkey weight and serving time; get when to defrost, when the oven goes on, when the turkey goes in and out, and when each side starts. Nothing saved or sent.">
+<style>
+:root{--red:#B91C1C;--green:#166534;--ink:#1F2937;--line:#D1D5DB;--bg:#FFFBEB}
+*{box-sizing:border-box}
+body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);margin:0;padding:1rem}
+.w{max-width:46rem;margin:0 auto}
+h1{font-size:1.6rem;margin:.2rem 0 .4rem;color:var(--red)}
+h2{font-size:1.15rem;margin:0 0 .5rem}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:1rem;margin:1rem 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.8rem}
+label{display:block;font-weight:600;margin-bottom:.2rem}
+input,select{font:inherit;border:1.5px solid var(--line);border-radius:8px;padding:.45rem .55rem;width:100%;background:#fff}
+.chk label{display:inline-flex;gap:.4rem;align-items:center;font-weight:500;margin:.2rem 1rem .2rem 0}
+.chk input{width:auto}
+button{font:inherit;font-weight:700;background:var(--green);color:#fff;border:0;border-radius:8px;padding:.6rem 1rem;cursor:pointer}
+table{border-collapse:collapse;width:100%}
+th,td{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+td.t{white-space:nowrap;font-weight:700;width:6.5rem}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.6rem;margin:.6rem 0}
+.sum div{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:.6rem;font-size:.9rem}
+.sum b{display:block;font-size:1.3rem;color:var(--green)}
+.warn{background:#FEF3C7;border-left:6px solid #D97706;border-radius:8px;padding:.6rem .8rem;margin:.6rem 0}
+.muted{color:#6B7280;font-size:.9rem}
+@media print{button,.noprint{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>Christmas dinner timing calculator</h1>
+<p>Enter your turkey weight and the time you want to eat. You get a timeline that works backwards: when to start defrosting, when the oven goes on, when the turkey goes in and comes out, and when each side starts. UK kitchen, kilograms and Celsius. Nothing is saved or sent anywhere.</p>
+
+<div class="card">
+ <h2>What are you cooking?</h2>
+ <div class="grid">
+  <div><label for="kind">Joint</label><select id="kind"><option value="whole">Whole turkey</option><option value="crown">Turkey crown</option></select></div>
+  <div><label for="kg">Weight in kg (as on the pack)</label><input id="kg" type="number" min="1" max="15" step="0.1" inputmode="decimal" value="5"></div>
+  <div><label for="date">Serving date</label><input id="date" type="date"></div>
+  <div><label for="time">Serving time</label><input id="time" type="time" value="14:00"></div>
+  <div><label for="oven">Oven</label><select id="oven"><option value="fan">Fan</option><option value="conv">Conventional</option></select></div>
+  <div><label for="stuff">Stuffing</label><select id="stuff"><option value="out">Cooked separately (advised)</option><option value="in">Inside the bird</option></select></div>
+  <div><label for="rest">Rest under foil (minutes)</label><input id="rest" type="number" min="20" max="90" step="5" value="30"></div>
+  <div><label for="fridge">Out of the fridge before it goes in (minutes)</label><input id="fridge" type="number" min="0" max="120" step="5" value="60"></div>
+ </div>
+ <div class="chk" style="margin-top:.6rem">
+  <label><input type="checkbox" id="frozen" checked> It is frozen and needs defrosting</label>
+ </div>
+ <h2 style="margin-top:.8rem">What else is on the table?</h2>
+ <div class="chk" id="sides"></div>
+ <p><button id="go" type="button">Work out my timings</button> <button id="pr" type="button" class="noprint" style="background:#374151">Print</button></p>
+</div>
+
+<div id="sum" class="sum"></div>
+<div id="msg"></div>
+
+<div class="card" id="outcard" hidden>
+ <h2>Your timeline</h2>
+ <table><thead><tr><th>Time</th><th>What to do</th></tr></thead><tbody id="rows"></tbody></table>
+ <p class="muted" style="margin-bottom:0">Always check the pack label and use a meat thermometer. Push the probe into the thickest part, between leg and breast: aim for 75&deg;C or more, with no pink meat and clear juices. The Food Standards Agency also lists 70&deg;C held for 2 minutes. Never wash the turkey. These times are estimates and ovens vary; if your pack gives different timings, follow the pack.</p>
+</div>
+
+<p class="muted">The turkey timings follow published UK guidance (Food Standards Agency, BBC Good Food); where sources differ the calculator uses the longer figure. Oven preheat, carving, spare time and side-dish start times are our own allowances, not official guidance: change the lists near the top of the script to suit your recipes. Want a one-page printable countdown for the fridge door? See the <a href="https://www.tchworks.co.uk/free/christmas-dinner-timing-calculator/?utm_source=github&amp;utm_medium=repo&amp;utm_campaign=dinner-timing-repo">page version with the full guidance</a>.</p>
+</div>
+<script>
+// Side dishes: [id, label, minutes before serving that the dish goes in/starts, note]. Edit to suit your recipes.
+var SIDES=[
+ ['pot','Roast potatoes',65,'Roast potatoes go into the hot oven (par-boil and steam-dry them before this).'],
+ ['veg','Parsnips and roast veg',50,'Parsnips and roast veg go in.'],
+ ['pig','Pigs in blankets',35,'Pigs in blankets go in (check pack time).'],
+ ['stu','Stuffing',45,'Stuffing (cooked separately) goes in.'],
+ ['yor','Yorkshire puddings',25,'Yorkshire puddings go in on a very hot tray.'],
+ ['spr','Sprouts and boiled veg',15,'Start the sprouts and boiled veg.'],
+ ['gra','Gravy',15,'Make the gravy with the turkey juices.'],
+ ['pla','Warm the plates',10,'Warm the plates.']
+];
+var PREHEAT=20, CARVE=10;
+function el(i){return document.getElementById(i)}
+function pad(n){return (n<10?'0':'')+n}
+function hm(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
+var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function dm(d){return DAYS[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)}
+function mins(d,m){return new Date(d.getTime()+m*60000)}
+function cookMinutes(kind,kg){
+ if(kind==='crown'){return kg<4?Math.round(20*kg+70):Math.round(20*kg+90)}
+ if(kg<4.5){return Math.round(45*kg+20)}
+ return Math.round(40*kg)
+}
+function dur(m){var h=Math.floor(m/60),r=m%60;return (h?h+' h ':'')+(r?r+' min':'')||'0 min'}
+function plan(o){
+ var cook=cookMinutes(o.kind,o.kg);
+ var spare=o.stuffIn?30:15;
+ var serve=o.serve;
+ var carveAt=mins(serve,-CARVE);
+ var outAt=mins(carveAt,-o.rest);
+ var inAt=mins(outAt,-(cook+spare));
+ var ovenOn=mins(inAt,-PREHEAT);
+ var fridgeAt=mins(inAt,-o.fridge);
+ var temp=o.kind==='crown'?(o.fan?'170':'190'):(o.fan?'160':'180');
+ var tempTxt=temp+'\u00B0C '+(o.fan?'fan':'conventional');
+ var rows=[];
+ if(o.frozen){rows.push([mins(inAt,-Math.round(12*o.kg*60)),'Start defrosting in the fridge on the bottom shelf, covered, in a dish that catches drips (allows 12 hours per kg; never at room temperature).'])}
+ rows.push([fridgeAt,'Take the turkey out of the fridge.']);
+ rows.push([ovenOn,'Oven on to '+tempTxt+'.']);
+ rows.push([inAt,'Turkey in the oven ('+dur(cook)+' guide plus '+spare+' min spare). First temperature check from '+hm(mins(outAt,-spare))+'.']);
+ SIDES.forEach(function(s){if(o.sides[s[0]]){rows.push([mins(serve,-s[2]),s[3]])}});
+ rows.push([outAt,'Turkey out. Cover with foil and rest for '+o.rest+' min. Check it reached 75\u00B0C in the thickest part first.']);
+ rows.push([carveAt,'Carve.']);
+ rows.push([serve,'Serve.']);
+ rows.sort(function(a,b){return a[0]-b[0]});
+ return {rows:rows,cook:cook,inAt:inAt,outAt:outAt,ovenOn:ovenOn,temp:tempTxt,spare:spare};
+}
+function clear(n){while(n.firstChild)n.removeChild(n.firstChild)}
+function add(p,tag,text,cls){var e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;p.appendChild(e);return e}
+function run(){
+ var kg=parseFloat(el('kg').value);
+ var sum=el('sum'),msg=el('msg'),rows=el('rows');
+ clear(sum);clear(msg);clear(rows);
+ if(!(kg>=1&&kg<=15)){add(msg,'div','Enter a turkey weight between 1 and 15 kg.','warn');el('outcard').hidden=true;return}
+ if(!el('date').value||!el('time').value){add(msg,'div','Pick the serving date and time.','warn');el('outcard').hidden=true;return}
+ var dp=el('date').value.split('-'),tp=el('time').value.split(':');
+ var serve=new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1]);
+ var sides={};SIDES.forEach(function(s){sides[s[0]]=el('side_'+s[0]).checked});
+ var rest=parseInt(el('rest').value,10);if(!(rest>=20))rest=30;
+ var fr=parseInt(el('fridge').value,10);if(!(fr>=0))fr=60;
+ var r=plan({kind:el('kind').value,kg:kg,serve:serve,fan:el('oven').value==='fan',stuffIn:el('stuff').value==='in',rest:rest,fridge:fr,frozen:el('frozen').checked,sides:sides});
+ var box=[['Oven on',hm(r.ovenOn)],['Turkey in',hm(r.inAt)],['Turkey out',hm(r.outAt)],['Cooking guide',dur(r.cook)]];
+ box.forEach(function(b){var d=add(sum,'div',b[0]+' ');add(d,'b',b[1])});
+ if(el('stuff').value==='in'){add(msg,'div','Stuffing inside the bird adds time and needs the stuffing itself to reach a safe temperature. Cooking it separately is advised, so 30 minutes of spare time are planned instead of 15.','warn')}
+ if(kg>6.5&&el('kind').value==='whole'){add(msg,'div','For a bird over 6.5 kg this uses the longer 40 minutes per kg. Check for doneness early.','warn')}
+ var last='';
+ r.rows.forEach(function(x){
+  var day=dm(x[0]);var tr=document.createElement('tr');
+  add(tr,'td',(day!==last?day+' ':'')+hm(x[0]),'t');add(tr,'td',x[1]);rows.appendChild(tr);last=day;
+ });
+ el('outcard').hidden=false;
+}
+(function init(){
+ var s=el('sides');
+ SIDES.forEach(function(x){var l=document.createElement('label');var c=document.createElement('input');c.type='checkbox';c.id='side_'+x[0];c.checked=true;l.appendChild(c);l.appendChild(document.createTextNode(' '+x[1]));s.appendChild(l)});
+ var now=new Date(),y=now.getFullYear();
+ var xm=new Date(y,11,25);if(now>xm)xm=new Date(y+1,11,25);
+ el('date').value=xm.getFullYear()+'-12-25';
+ el('go').onclick=run;el('pr').onclick=function(){window.print()};
+ ['kind','kg','date','time','oven','stuff','rest','fridge','frozen'].forEach(function(i){el(i).addEventListener('change',run)});
+ SIDES.forEach(function(x){el('side_'+x[0]).addEventListener('change',run)});
+ run();
+})();
+</script>
+</body>
+</html>
