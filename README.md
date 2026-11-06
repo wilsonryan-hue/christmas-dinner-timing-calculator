@@ -4,6 +4,8 @@ Enter your turkey weight and the time you want to eat. You get a timeline that w
 
 **Use it now, no install:** download `index.html` and open it in any browser, or use the page version with the full guidance at [tchworks.co.uk/free/christmas-dinner-timing-calculator](https://www.tchworks.co.uk/free/christmas-dinner-timing-calculator/?utm_source=github&utm_medium=repo&utm_campaign=dinner-timing-repo).
 
+**Free printable PDF (no install):** [Download the A4 pack](https://github.com/wilsonryan-hue/christmas-dinner-timing-calculator/releases/download/v1.0.0-free-printable/christmas-dinner-timing-checklist-2026-free.pdf) — blank turkey timing sheet, side-dish checklist, worked 5 kg example, food-safety notes ([release notes](https://github.com/wilsonryan-hue/christmas-dinner-timing-calculator/releases/tag/v1.0.0-free-printable)).
+
 ## What it does
 
 - Whole turkey or crown, weight in kg, fan or conventional oven, stuffing cooked separately or inside the bird.
